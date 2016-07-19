@@ -1,0 +1,6 @@
+# .txt files, used for testing output
+*.txt
+
+# generated dictionary and frequency distribution files
+dictionary.csv
+frequencydata.csv
