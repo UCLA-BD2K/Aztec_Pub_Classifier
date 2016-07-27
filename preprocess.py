@@ -29,9 +29,33 @@ abstracts = [] # all text from title and abstract
 for line in fileinput.input(files='-'):
 	abstracts.append(line)
 
+miscFeatures = [] # other features
+
 # tokenize the text
 for i in range(len(abstracts)):
-	# remove urls
+	# change github, bioconductor, sourceforge urls to unique words
+	title = abstracts[i].split('#')[0]
+	colon = title.find(':')
+	miscFeatures.append([])
+	if colon >= 0:
+		miscFeatures[i].append(1)
+		a = title[0:colon]
+		b = a.lower()
+		diff = sum(a[k] != b[k] for k in range(len(a)))
+		ratio = diff/len(a)
+		miscFeatures[i].append(ratio)
+	else:
+		miscFeatures[i].append(0)
+		a = title
+		b = a.lower()
+		diff = sum(a[k] != b[k] for k in range(len(a)))
+		ratio = diff/len(a)
+		miscFeatures[i].append(ratio)
+
+	abstracts[i] = re.sub(r'https?:\/\/github\.com\S*', 'githuburl', abstracts[i])
+	abstracts[i] = re.sub(r'https?:\/\/bioconductor\.org\S*', 'bioconductorurl', abstracts[i])
+	abstracts[i] = re.sub(r'https?:\/\/sourceforge\.net\S*', 'sourceforgeurl', abstracts[i])
+	# remove all other urls
 	abstracts[i] = re.sub(r'https?:\/\/\S*', 'url', abstracts[i])
 	abstracts[i] = re.sub(r'www\.\S*', 'url', abstracts[i])
 	# remove email addresses
@@ -56,15 +80,21 @@ if not args.train:
 			for k in range(len(row)):
 				dictionary.add(row[k])
 
+# write misc features to file
+with open('miscfeatures.csv', 'w', newline='') as csvfile:
+	writer = csv.writer(csvfile, delimiter=',', quotechar='|', quoting=csv.QUOTE_MINIMAL)
+	for row in miscFeatures:
+		writer.writerow(row)
+
 # results = [[]] * len(abstracts)
-for i in range(len(abstracts)): 
+for i in range(len(abstracts)):
 	for k in abstracts[i]:
 		if k.lower() not in stopwords and k not in string.punctuation:
 			word = es.stem(k.lower())
 			# remove apostrophes at beginnings of words left from contractions or single quotes
 			word = re.sub(r'^\'', '', word)
 			# remove strings that contain ONLY numbers and punctuation
-			if re.fullmatch(r'[0-9\!\"\#\$\%\&\'\(\)\*\+\,\-.\/\:\;\<\=\>\?\@\[\\\]\^\_\`\{\|\}~≥]*', word) is None:
+			if re.fullmatch(r'[0-9\!\"\#\$\%\&\'\(\)\*\+\,\-.\/\:\;\<\=\>\?\@\[\\\]\^\_\`\{\|\}\~≥]*', word) is None:
 				if args.train:
 					dictionary.add(word)
 					pairs.append((i+1, word))

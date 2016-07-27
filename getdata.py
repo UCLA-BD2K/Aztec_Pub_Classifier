@@ -29,11 +29,11 @@ abstracts = [] # all text; titles + abstracts
 filename = 'data.csv'
 outfile = 'values.csv'
 
-if(len(sys.argv) == 3):
+if len(sys.argv) == 3:
 	filename = str(sys.argv[1])
 	outfile = str(sys.argv[2])
 
-if(len(sys.argv) == 2 or len(sys.argv) > 3):
+if len(sys.argv) != 3:
 	print("Usage: python3 getdata.py <data file> <value output file>")
 	exit(1)
 
@@ -56,10 +56,10 @@ z = 0
 for datum in data:
 	root = ET.fromstring(datum.encode('utf-8'))
 	article = root.find('PubmedArticle').find('MedlineCitation').find('Article')
-	temp = article.find('ArticleTitle').text
+	temp = article.find('ArticleTitle').text + ' # '
 	for section in article.find('Abstract').findall('AbstractText'):
 		if section.text is not None:
-			temp += ' ' + section.text
+			temp += section.text
 	abstracts.append(temp)
 	z += 1
 

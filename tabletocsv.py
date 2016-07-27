@@ -3,6 +3,7 @@
 import fileinput
 import csv
 import sys
+import argparse
 
 ########################################################################
 # INPUT:
@@ -19,13 +20,15 @@ import sys
 ########################################################################
 
 data = []
-filename = 'trainX.csv'
 
-if len(sys.argv) == 2:
-	filename = sys.argv[1]
-else:
-	print("Usage: python3 tabletocsv.py <output file>")
-	exit(1)
+parser = argparse.ArgumentParser(description='Convert frequency distribution table into a .csv file that can be fed into the classifier')
+parser.add_argument('--features', '-f', nargs=1, default=None,
+					help='Any additional features in a .csv file')
+parser.add_argument('output', nargs=1,
+					help='Name of output file for X data')
+args = parser.parse_args()
+print(args.features)
+print(args.output)
 
 first = 0
 for line in fileinput.input(files='-'):
@@ -37,8 +40,16 @@ for line in fileinput.input(files='-'):
 	# TODO: fix hardcoded max
 	data.append([int(k)/17 for k in line.split()])
 
+with open(args.features[0], 'r', newline='') as csvfile:
+	reader = csv.reader(csvfile, delimiter=',', quotechar='|')
+	k = 0
+	for row in reader:
+		data[k].append(row[0])
+		data[k].append(row[1])
+		k += 1
+
 # write the data to a .csv file
-with open(filename, 'w', newline='') as csvfile:
+with open(args.output[0], 'w', newline='') as csvfile:
 	writer = csv.writer(csvfile, delimiter=' ', quotechar='|', quoting=csv.QUOTE_MINIMAL)
 	for datum in data:
 		# skip first column because we don't want the labels
