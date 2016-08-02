@@ -80,19 +80,16 @@ if not args.train:
 			for k in range(len(row)):
 				dictionary.add(row[k])
 
-# write misc features to file
-with open('miscfeatures.csv', 'w', newline='') as csvfile:
-	writer = csv.writer(csvfile, delimiter=',', quotechar='|', quoting=csv.QUOTE_MINIMAL)
-	for row in miscFeatures:
-		writer.writerow(row)
-
 # results = [[]] * len(abstracts)
 for i in range(len(abstracts)):
+	miscFeatures[i].append(0)
 	for k in abstracts[i]:
 		if k.lower() not in stopwords and k not in string.punctuation:
 			word = es.stem(k.lower())
 			# remove apostrophes at beginnings of words left from contractions or single quotes
 			word = re.sub(r'^\'', '', word)
+			if word == 'githuburl' or word == 'bioconductorurl' or word == 'sourceforgeurl':
+				miscFeatures[i][2] += 1
 			# remove strings that contain ONLY numbers and punctuation
 			if re.fullmatch(r'[0-9\!\"\#\$\%\&\'\(\)\*\+\,\-.\/\:\;\<\=\>\?\@\[\\\]\^\_\`\{\|\}\~≥]*', word) is None:
 				if args.train:
@@ -106,6 +103,17 @@ for k in dictionary:
 
 cfdist = nltk.ConditionalFreqDist(pairs)
 cfdist.tabulate()
+
+filename = 'miscfeaturestest.csv'
+if args.train:
+	filename = 'miscfeatures.csv'
+
+
+# write misc features, i.e. features that aren't word frequency, to file
+with open(filename, 'w', newline='') as csvfile:
+	writer = csv.writer(csvfile, delimiter=' ', quotechar='|', quoting=csv.QUOTE_MINIMAL)
+	for row in miscFeatures:
+		writer.writerow(row)
 
 if args.train:
 	with open('dictionary.csv', 'w', newline='') as csvfile:

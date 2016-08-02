@@ -4,6 +4,8 @@ import fileinput
 import csv
 import sys
 import argparse
+from sklearn import preprocessing
+import numpy as np
 
 ########################################################################
 # INPUT:
@@ -27,8 +29,6 @@ parser.add_argument('--features', '-f', nargs=1, default=None,
 parser.add_argument('output', nargs=1,
 					help='Name of output file for X data')
 args = parser.parse_args()
-print(args.features)
-print(args.output)
 
 first = 0
 for line in fileinput.input(files='-'):
@@ -37,21 +37,25 @@ for line in fileinput.input(files='-'):
 		first += 1
 		continue
 	# split on whitespace and cast to int
-	# TODO: fix hardcoded max
-	data.append([int(k)/17 for k in line.split()])
+	data.append([int(k) for k in line.split()])
 
 with open(args.features[0], 'r', newline='') as csvfile:
-	reader = csv.reader(csvfile, delimiter=',', quotechar='|')
+	reader = csv.reader(csvfile, delimiter=' ', quotechar='|')
 	k = 0
 	for row in reader:
 		data[k].append(row[0])
 		data[k].append(row[1])
 		k += 1
 
+# scale data with sklearn
+X = np.array(data)
+X = np.delete(X, 0, 1)
+scaler = preprocessing.MaxAbsScaler()
+X = scaler.fit_transform(X)
+
 # write the data to a .csv file
 with open(args.output[0], 'w', newline='') as csvfile:
 	writer = csv.writer(csvfile, delimiter=' ', quotechar='|', quoting=csv.QUOTE_MINIMAL)
-	for datum in data:
+	for datum in X:
 		# skip first column because we don't want the labels
-		del datum[0]
 		writer.writerow(datum)
