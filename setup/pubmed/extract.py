@@ -63,10 +63,12 @@ class PubmedExtract:
             obj['abstract'] = ''
 
             full_info_count = 0 # keeps track of how many sections were found in pubmed
-            for section in article.find('Abstract').findall('AbstractText'):
-                if section.text is not None:
-                    full_info_count+=1
-                    obj['abstract'] += section.text
+            abstract = article.find('Abstract')
+            if abstract is not None:
+                for section in abstract.findall('AbstractText'):
+                    if section.text is not None:
+                        full_info_count+=1
+                        obj['abstract'] += section.text + " "
             obj['doi'] = article.find('ELocationID').text
 
             # if pubmed does not have the abstract or if it seems like it is missing info, extract abstract from website
