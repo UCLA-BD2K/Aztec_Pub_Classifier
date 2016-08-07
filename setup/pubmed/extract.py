@@ -76,9 +76,9 @@ def retrievePub(pubIDs, classifiedPubs=[]):
     results = [] # return array of objects
     xml_data = [] # data received from query in XML format
     for id in pubIDs:
-    	tempURL = PUBMED_ID_URL + id
-    	r = requests.get(tempURL)
-    	xml_data.append(r.text)
+        tempURL = PUBMED_ID_URL + id
+        r = requests.get(tempURL)
+        xml_data.append(r.text)
 
     # parse the xml results and just get the article title and abstract
     for data in xml_data:

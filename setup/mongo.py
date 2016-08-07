@@ -10,17 +10,20 @@ class DBClient:
 
     def queryDOI(self, doi):
         cursor = self.db.numbers.find({'doi':doi})
-        print(cursor)
+        results = []
         for doc in cursor:
-            print(doc)
+            results.append(doc)
+        return results
 
-    def queryDOIList(self, doi):
+    def queryDOIList(self, dois):
         cursor = self.db.numbers.find({'doi': {'$in': dois}})
-        print(cursor)
+        results = []
         for doc in cursor:
-            print(doc)
+            results.append(doc)
+        return results
 
-db  = DBClient('mongodb://BD2K:ucla4444@ds145415.mlab.com:45415/dois')
-# db.queryDOI('10.1093/bioinformatics/btv089')
-dois = ['10.1093/bioinformatics/btv089', '10.1093/bioinformatics/btv271', '10.1093/bioinformatics/btu854', '10.1093/bioinformatics/btw486']
-db.queryDOIList(dois)
+    def insertAbstract(self, abstract):
+        result = self.db.numbers.update_one({'doi':abstract['doi']},
+            {'$set':{'title':abstract['title'], 'abstract':abstract['abstract']}},
+            upsert=True)
+        return result
