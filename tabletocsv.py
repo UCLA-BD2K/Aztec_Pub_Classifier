@@ -39,13 +39,14 @@ for line in fileinput.input(files='-'):
 	# split on whitespace and cast to int
 	data.append([int(k) for k in line.split()])
 
-with open(args.features[0], 'r', newline='') as csvfile:
-	reader = csv.reader(csvfile, delimiter=' ', quotechar='|')
-	k = 0
-	for row in reader:
-		data[k].append(row[0])
-		data[k].append(row[1])
-		k += 1
+if args.features is not None:
+	with open(args.features[0], 'r', newline='') as csvfile:
+		reader = csv.reader(csvfile, delimiter=' ', quotechar='|')
+		k = 0
+		for row in reader:
+			data[k].append(row[0])
+			data[k].append(row[1])
+			k += 1
 
 # scale data with sklearn
 X = np.array(data)

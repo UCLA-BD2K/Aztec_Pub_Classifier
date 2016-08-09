@@ -70,6 +70,8 @@ class PubmedExtract:
                         full_info_count+=1
                         obj['abstract'] += section.text + " "
             obj['doi'] = article.find('ELocationID').text
+            if len(obj['doi']) < 10:
+                obj['doi'] = '10.1093/bioinformatics/' + obj['doi']
 
             # if pubmed does not have the abstract or if it seems like it is missing info, extract abstract from website
             if obj['abstract'] == '' or full_info_count < 4:
