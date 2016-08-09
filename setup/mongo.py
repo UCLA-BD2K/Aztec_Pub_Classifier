@@ -22,8 +22,19 @@ class DBClient:
             results.append(doc)
         return results
 
+    def queryAll(self):
+        cursor = self.db.numbers.find({})
+        results = []
+        for doc in cursor:
+            results.append(doc)
+        return results
+
     def insertAbstract(self, abstract):
+        obj = {'title':abstract['title'], 'abstract':abstract['abstract'], 'pmid' :abstract['pmid']}
+        if 'is_tool' in abstract:
+            obj['is_tool'] = abstract['is_tool']
+
         result = self.db.numbers.update_one({'doi':abstract['doi']},
-            {'$set':{'title':abstract['title'], 'abstract':abstract['abstract']}},
+            {'$set':obj},
             upsert=True)
         return result
