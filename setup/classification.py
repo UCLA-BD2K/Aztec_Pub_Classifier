@@ -1,6 +1,7 @@
 from abc import ABCMeta, abstractmethod
 
 import tensorflow as tf
+import numpy as np
 
 class Feature:
     __metaclass__ = ABCMeta
@@ -8,7 +9,7 @@ class Feature:
     def getFeature(self, obj):
         raise NotImplementedError()
 
-def toBinary(self, value):
+def toBinary(value):
     if value is True:
         return 1
     else:
@@ -24,14 +25,23 @@ class Classification:
 
 
     def buildFeatures(self):
-        feature_vector = []
-        for sample in self.dataset:
-            sample_vector = []
-            for feature in self.features:
-                sample_vector.append(feature.getFeature(sample))
-            feature_vector.append(sample_vector)
+        all_feature_vector = None
+        labels = None
 
-        return feature_vector
+        for data in self.dataset:
+            feature_vector = []
+            for feat in self.features:
+                feature_vector = feature_vector+feat.getFeature(data)
+            if all_feature_vector is None:
+                all_feature_vector = np.array([np.asarray(feature_vector)])
+                labels = np.array([toBinary(data['is_tool'])])
+            else:
+                all_feature_vector = np.vstack((all_feature_vector, np.asarray(feature_vector)))
+                labels = np.vstack((labels, np.array([toBinary(data['is_tool'])])))
+
+
+
+        return all_feature_vector, labels
 
         # TODO: input classification function
         # features: a list of feature vectors
@@ -57,6 +67,7 @@ class Trainer:
         self.sizeX = sizeX
         self.sizeY = sizeY
 
+    # TODO: fix function
     def runLogisticReg(self, trainX, trainY, testX, testY):
         # tf graph input
         x = tf.placeholder(tf.float32, [None, self.sizeX])
@@ -64,13 +75,13 @@ class Trainer:
 
         # set model weights
         W = tf.Variable(tf.zeros([self.sizeX, self.sizeY]))
-        b = tf.Variable(tf.zeros([self.sizeY]))
+        b = tf.Variable(tf.zeros([1, self.sizeY]))
 
         # construct model
         pred = tf.nn.softmax(tf.matmul(x, W)+b)
 
         # minimize error using cross entropy
-        cost = tf.reduce_mean(-tf.reduce_sum(y*tf.logpred), reduction_indices=1)
+        cost = tf.reduce_mean(-tf.reduce_sum(y*tf.log(pred)))
         # gradient descent
         optimizer = tf.train.GradientDescentOptimizer(self.learning_rate).minimize(cost)
 
@@ -84,15 +95,14 @@ class Trainer:
 
             for epoch in range(self.epochs):
                 avg_cost = 0.
-                total_batch = int(self.sizeX/self.batch)
+                total_batch = int(trainLen/self.batch)
 
                 for i in range(total_batch):
                     start_in = i*self.batch
                     end_in = start_in + self.batch
                     batch_xs = trainX[start_in : end_in]
                     batch_ys = trainY[start_in : end_in]
-
-                    _, c = sess.run([optimizer, cost], free_dict={x: batch_xs, y: batch_ys})
+                    _, c = sess.run([optimizer, cost], feed_dict={x: batch_xs, y: batch_ys})
 
                     avg_cost += c/total_batch
                 if (epoch+1)%self.display_rate == 0:
@@ -100,8 +110,8 @@ class Trainer:
 
             print("Optimization Finished!")
 
-        # Test model
-        correct_prediction = tf.equal(tf.argmax(pred, 1), tf.argmax(y, 1))
-        # calculate accuracy for test set
-        accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
-        print("Accuracy:", accuracy.eval({x:testX, y:testY}))
+            # Test model
+            correct_prediction = tf.equal(tf.argmax(pred, 1), tf.argmax(y, 1))
+            # calculate accuracy for test set
+            accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
+            print("Accuracy:", accuracy.eval({x:testX, y:testY}))
