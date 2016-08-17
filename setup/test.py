@@ -5,6 +5,9 @@ import classification as cl
 from time import sleep
 import numpy as np
 import csv
+from sklearn.cross_validation import train_test_split
+from sklearn.preprocessing import MultiLabelBinarizer
+
 
 # Features
 
@@ -47,30 +50,7 @@ class Feature3(cl.Feature):
 # connect to mongo db
 db  = mongo.DBClient('mongodb://BD2K:ucla4444@ds145415.mlab.com:45415/dois')
 
-# #############################################################
-# Extract abstracts from Pubmed and insert into database
-# ############################################################
-#
-# abstracts = ex.extractFromFile('../data.csv', 16)
-# print(abstracts)
-
-# for a in abstracts:
-#     query = db.queryDOI(a['doi'])
-#     if query[0]['abstract']=='None':
-#         retry = 0
-#         while a['abstract']=='None' and retry < 10:
-#             sleep(retry*0.5)
-#             abstract = ex.extractAbstract(a['doi'])
-#             if abstract is not None or abstract!='None':
-#                 a['abstract'] = abstract
-#             print(a['doi'], 'Extracted abstract:', (a['abstract']!='None'))
-#             retry+=1
-#         db.insertAbstract(a)
-# #############################################################
-
-# #############################################################
-# Create features from training set and apply logistic regression
-# ############################################################
+# query for dataset
 papers = db.queryAll()
 # papers = db.queryDOI('10.1093/bioinformatics/btv187')
 
@@ -90,19 +70,5 @@ feature_list = [f1,f2,f3]
 
 # prepare classification model
 classifier = cl.Classification(feature_list, papers)
-'''
-(all_features, labels) = classifier.buildFeatures()
-train = cl.Trainer(0.01, 25000, 100, 100)
-train.setInputDataSize(len(all_features[0]), 2)
-for i in range(len(all_features)):
-    print(all_features[i], labels[i])
-train.runLogisticReg(all_features[0:400], labels[0:400], all_features[400:500], labels[400:500])
-'''
 
-train = cl.Trainer(0.01, 10000, 100, 100)
-trainX = np.genfromtxt("trainX.csv", delimiter=" ")
-trainY = np.genfromtxt("trainY.csv", delimiter=" ")
-testX = np.genfromtxt("testX.csv", delimiter=" ")
-testY = np.genfromtxt("testY.csv", delimiter=" ")
-train.setInputDataSize(len(trainX[0]), 2)
-train.runLogisticReg(trainX, trainY, testX, testY)
+classifier.train(cl.ML_Method.LR, 0.001, 100000, 100)

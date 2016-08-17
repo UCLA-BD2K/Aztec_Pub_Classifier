@@ -141,7 +141,7 @@ def retrievePub_helper(pubIDs, classifiedPubs={}):
         obj['doi'] = doi
 
         # if pubmed does not have the abstract or if it seems like it is missing info, extract abstract from website
-        if obj['abstract'] == '' or obj['abstract'] is None or full_info_count < 3:
+        if obj['abstract'] == '' or obj['abstract'] is None or full_info_count < 3 or len(obj['abstract']) < 400:
             abstract = extractAbstract(obj['doi'])
             if abstract is not None and abstract!="None":
                 obj['abstract'] = abstract
@@ -154,7 +154,7 @@ def retrievePub_helper(pubIDs, classifiedPubs={}):
 def extractAbstract(doi):
     doi_url = DOI_ID_URL+str(doi)
 
-    sleep(1.5)
+    sleep(3)
     # make request for abstract
     req = requests.get(doi_url)
     soup = BeautifulSoup(req.text, 'html.parser')
